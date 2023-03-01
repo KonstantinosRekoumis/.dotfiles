@@ -1,0 +1,6 @@
+{
+    "[sourcepawn]": {
+        "rewrap.wholeComment": false,
+        "rewrap.autoWrap.enabled": false
+    }
+}

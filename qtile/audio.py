@@ -13,61 +13,63 @@ class my_audio_mixer:
         self.master_sink = None
         self.master_source = None
         self.load_config()
-        self.set_master_dev()
+        # self.set_master_dev() # needs to find its purpose
+    
+    def pactl_get(self,tokens):
+        res = sh.run(tokens,capture_output=True,check=True).stdout
+        res = res.decode('ASCII').replace('\t','')
+        if "Name: " in res:
+            out =  res.split("Name: ")[1:]
+            return [dev[:-1] for dev in out]
+        else:
+            return res[:-1]
     
     def load_config(self):
         """
-        grabs the audio drivers
+        grabs the default audio drivers.
+        TODO: maybe useful to add flexibility and change the default source and sink
         """
-        get_sinks = "pactl list sinks | grep \"Name\" "
+        get_DefSink = ['pactl', 'get-default-sink']
+        get_DefSrce = ['pactl', 'get-default-source']
 
-        res = sh.run(get_sinks,shell=True,capture_output=True).stdout
-        res = res.decode('ASCII').replace('\t','')
-        sinks = res.split("Name: ")[1:]
-
-        self.sinks = [dev[:-1] for dev in sinks]
-
-        get_sources = "pactl list sources | grep \"Name\" "
-
-        res = sh.run(get_sources,shell=True,capture_output=True).stdout
-        res = res.decode('ASCII').replace('\t','')
-        sources = res.split("Name: ")[1:]
-
-        self.sources = [dev[:-1] for dev in sources]
+        self.master_sink = self.pactl_get(get_DefSink)
+        self.master_source = self.pactl_get(get_DefSrce)
     
     def set_master_dev(self):
-        self.master_sink = self.sinks[0]
-        self.master_source = self.sources[0]
+        pass
 
     def set_master_sink_volume(self, volume: int):
         # 'pactl set-sink-volume alsa_output.pci-0000_00_1f.3.analog-stereo +10%'
-        set_cmd = ('pactl set-sink-volume '
-                    +self.master_sink + ' '
-                    +str(volume)
-                    +'%')
+        set_cmd = ('pactl',
+                    'set-sink-volume',
+                    self.master_sink, 
+                    str(volume)+'%')
         sh.run(set_cmd,shell=True)
 
     def set_master_source_volume(self, volume: int):
         # 'pactl set-source-volume alsa_output.pci-0000_00_1f.3.analog-stereo +10%'
-        set_cmd = ('pactl set-source-volume '
-                    +self.master_source + ' '
-                    +str(volume)
-                    +'%')
-        sh.run(set_cmd,shell=True)
+        set_cmd = ['pactl',
+                    'set-source-volume',
+                    self.master_source,
+                    str(volume)+'%']
+        sh.run(set_cmd,check=True)
+
     def get_master_sink_volume(self):
         # 'pactl get-sink-volume alsa_output.pci-0000_00_1f.3.analog-stereo +10%'
-        get_cmd = ('pactl get-sink-volume '
-                    +self.master_sink)
-        res = sh.run(get_cmd,shell=True,capture_output=True).stdout.decode('ASCII')
+        get_cmd = ['pactl',
+                    'get-sink-volume',
+                    self.master_sink]
+        res = sh.run(get_cmd,check=True,capture_output=True).stdout.decode('ASCII')
         res = res.split('/')[1].replace(' ','').replace('%','')
         res = int(res)
         return res
 
     def get_master_source_volume(self):
         # 'pactl get-source-volume alsa_output.pci-0000_00_1f.3.analog-stereo +10%'
-        get_cmd = ('pactl get-source-volume '
-                    +self.master_source )
-        res = sh.run(get_cmd,shell=True,capture_output=True).stdout.decode('ASCII')
+        get_cmd = ('pactl',
+                    'get-source-volume',
+                    self.master_source )
+        res = sh.run(get_cmd,check=True,capture_output=True).stdout.decode('ASCII')
         res = res.split('/')[1].replace(' ','').replace('%','')
         res = int(res)
         return res
@@ -75,32 +77,31 @@ class my_audio_mixer:
     def delta_master_sink_volume(self,incr:bool, delta_volume: int = 2):
         # 'pactl set-sink-volume alsa_output.pci-0000_00_1f.3.analog-stereo +10%'
         oper = '+' if incr else '-'
-        set_cmd = ('pactl set-sink-volume '
-                    +self.master_sink + ' '
-                    +oper
-                    +str(delta_volume)
-                    +'%')
+        set_cmd = ('pactl',
+                    'set-sink-volume',
+                    self.master_sink, 
+                    oper+str(delta_volume)+'%')
         vol = self.get_master_sink_volume()
         if vol <= 99 and incr:
-            sh.run(set_cmd,shell=True)
+            sh.run(set_cmd,check=True)
         elif not incr:
-            sh.run(set_cmd,shell=True)
+            sh.run(set_cmd,check=True)
 
     def delta_master_source_volume(self,incr:bool, delta_volume: int = 2):
         # 'pactl set-source-volume alsa_output.pci-0000_00_1f.3.analog-stereo +10%'
         oper = '+' if incr else '-'
-        set_cmd = ('pactl set-source-volume '
-                    +self.master_source + ' '
-                    +oper
-                    +str(delta_volume)
-                    +'%')
-        sh.run(set_cmd,shell=True)
+        set_cmd = ('pactl',
+                    'set-source-volume',
+                    self.master_source,
+                    oper+str(delta_volume)+'%')
+        sh.run(set_cmd,check=True)
     
     def enable_sink(self):
-        set_cmd = ('pactl set-sink-mute '
-                    +self.master_sink
-                    +' toggle')
-        sh.run(set_cmd,shell=True)
+        set_cmd = ('pactl', 
+                    'set-sink-mute',
+                    self.master_sink,
+                    'toggle')
+        sh.run(set_cmd,check=True)
 
 
 if __name__ == '__main__':        
