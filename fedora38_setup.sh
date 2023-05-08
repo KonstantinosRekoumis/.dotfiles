@@ -30,12 +30,12 @@ readonly REAL_USER_HOME=$(eval echo "~$REAL_USER")
 # dotfiles directories
 # https://stackoverflow.com/questions/59895/how-do-i-get-the-directory-where-a-bash-script-is-located-from-within-the-script
 readonly SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-readonly RC_DIR="$SCRIPT_DIR/../rc"
-readonly RC_MZL_DIR="$SCRIPT_DIR/../firefox"
+#readonly RC_DIR="$SCRIPT_DIR/../rc"
+#readonly RC_MZL_DIR="$SCRIPT_DIR/../firefox"
 
 # home directories to create
 readonly CLONED_ROOT="$REAL_USER_HOME/cloned"
-readonly MZL_ROOT="$REAL_USER_HOME/.mozilla/firefox"
+#readonly MZL_ROOT="$REAL_USER_HOME/.mozilla/firefox"
 readonly SSH_ROOT="$REAL_USER_HOME/.ssh"
 readonly BIN_ROOT="$REAL_USER_HOME/bin"
 readonly WRK_ROOT="$REAL_USER_HOME/work"
@@ -311,8 +311,8 @@ fi
 
 #######################################################################################################
 
-echo "Running firefox as user to create it's configuration directories; let it load fully, then close it..."
-su - "$REAL_USER" -c "firefox"
+#echo "Running firefox as user to create it's configuration directories; let it load fully, then close it..."
+#su - "$REAL_USER" -c "firefox"
 
 #######################################################################################################
 
